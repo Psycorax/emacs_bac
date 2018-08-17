@@ -1,0 +1,22 @@
+# -*- mode: snippet -*-
+# name: mysnippBaseTex
+# key: baseTex
+# --
+\include{Definition}
+\begin{document}
+\includepdf[pages = -]{${1:exercise}}
+\tableofcontents
+\newpage
+
+
+\section{Funktionsbeschreibung}
+${0}
+\section{Fragen}
+\section{Tests}
+\section{Screenshots}
+\subsection{example.png}
+\includegraphics{images/example.png}
+\section{Quellcode}
+\subsection{example}
+
+\end{document}

@@ -1,0 +1,41 @@
+# -*- mode: snippet -*-
+# name: mysnippBaseTex
+# key: baseTex
+# --
+\include{Definition}
+\begin{document}
+\title{${1:TITLE}}
+\subtitle{${2:SUBTITLE}}
+%% when more authors needed, uncomment and delete the next }
+\author{${3:AUTHOR}\protect\\\\${4:Matrikelnumber}}
+%%		\and
+%%		${5:AUTHOR}\protect\\\\${6:Matrikelnumber}}
+\date{\today}
+
+% comment out if no title is needed
+\maketitle
+
+\newpage
+\includepdf[pages = -]{${7:examplePDF}}
+\newpage
+\tableofcontents
+\newpage
+
+
+\section{Funktionsbeschreibung}
+${0:Text}\\
+\section{Fragen}
+\section{Tests}
+\section{Screenshots}
+\subsection{example.png}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=.95\textwidth]{images/example.png}
+  \caption{\label{fig:example} Dies ist ein Bild}
+\end{figure}
+\newpage
+\section{Quellcode}
+\subsection{Main.cpp}
+\sourceCode{ ../20180801_Calendar/src/Main.cpp}
+
+\end{document}

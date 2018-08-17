@@ -1,0 +1,202 @@
+#+STARTUP: overview
+#+TITLE: myinit_basic
+#+AUTHOR: Thomas Reisinger
+#+DATE: <2018-08-09 Do>
+
+* interface tweaks
+** basics
+   #+BEGIN_SRC emacs-lisp
+     ;; hide startup screen
+     (setq inhibit-startup-message t)
+
+     ;; hide toolbar
+     (tool-bar-mode -1)
+
+     ;; change to shorter answers
+     (fset 'yes-or-no-p 'y-or-n-p)
+   #+END_SRC
+*** line numbers in buffer
+    Don't use the alternative for Emacs <26, beacause it slows emacs
+    down. Use line at bottom for information about cursor and buffer
+    postions.
+   #+BEGIN_SRC emacs-lisp
+     ;; For Emacs >= 26
+     (if (>= emacs-major-version 26)
+	 (global-display-line-numbers-mode t)
+       (global-linum-mode)
+       )
+   #+END_SRC
+** themes
+   There are several builtin themes that come with emacs out of the
+   box, you can choose between them by typing M-x
+   customize-themes. There you get an overview an can test these
+   themes.  To get them into you standard configuration just type the
+   following line into your configuration file.
+   #+BEGIN_SRC emacs-lisp
+     (load-theme 'tango-dark t)
+   #+END_SRC
+
+  highlights the line with the cursor. Needs to change cursor or face
+  background, when tango-dark theme is used
+  #+BEGIN_SRC emacs-lisp
+    (global-hl-line-mode t)
+    ;; (set-face-background hl-line-face "DodgerBlue2")
+    (set-cursor-color "DarkRed")
+    ;; (list-colors-display) ;; show all colors with names
+  #+END_SRC
+* keybindings
+  Here are some personalized keybindings, for open files, that are
+  often used.
+  #+BEGIN_SRC emacs-lisp
+    (global-set-key (kbd "<f5>") 'revert-buffer)
+    (global-set-key (kbd "\e\ei")
+		    (lambda () (interactive) (find-file "~/Documents/git/emacs/myinit_basic.org")))
+  #+END_SRC
+* buffers
+** builtin
+   ibuffer is an enhanced builtin buffer view
+   #+BEGIN_SRC emacs-lisp
+     (defalias 'list-buffers 'ibuffer-other-window)
+   #+END_SRC
+* windows
+** builtin
+*** winner-mode
+    Saves old window configurations. Move through them by pressing
+    C-c left or right.
+    #+BEGIN_SRC emacs-lisp
+      (winner-mode 1)
+    #+END_SRC
+
+** ace-window
+   [[https://github.com/abo-abo/ace-window][ace-window]] switching with C-x o but then with numbers
+   #+BEGIN_SRC emacs-lisp
+     (use-package ace-window
+       :ensure t
+       :init
+       (progn
+	 (global-set-key [remap other-window] 'ace-window)
+	 (custom-set-faces
+	  '(aw-leading-char-face
+	    ((t (:inherit ace-jump-face-foreground :height 4.0))))) 
+	 ))
+   #+END_SRC
+* navigation(search)
+** builtin
+   built in completion with [[https://www.masteringemacs.org/article/introduction-to-ido-mode][ido mode]] comment out ido when ivy is in
+   use
+   #+BEGIN_SRC emacs-lisp
+     (setq ido-enable-flex-matching t)
+     (setq ido-everywhere t)
+     (ido-mode 1)
+   #+END_SRC
+** avy
+   Avy is needed by ace-window so we can use it as search as well.
+   [[https://github.com/abo-abo/avy][Avy]] is used like a search, but just to visible text. It uses a
+   char-based decision tree.  an alternative would be [[https://github.com/winterTTr/ace-jump-mode][ace-jump-mode]].
+   Also avy-goto-char-2 is available, there you have to type in 2
+   chars of the word you are looking for, instead of one. This results
+   in a smaller decision tree.
+   #+BEGIN_SRC emacs-lisp
+     (use-package avy
+       :ensure t
+       :bind ("M-s" . avy-goto-char-2))
+   #+END_SRC
+* misc features
+** try
+   This package allows you to [[https://github.com/larstvei/Try][try]] a package before installing it.
+   #+BEGIN_SRC emacs-lisp
+     (use-package try
+       :ensure t)
+   #+END_SRC
+** hungry-delete
+   [[https://github.com/nflath/hungry-delete][Hungry-delete]] deletes all whitespaces with one delete.
+   #+BEGIN_SRC emacs-lisp
+     (use-package hungry-delete
+       :ensure t
+       :config
+       (global-hungry-delete-mode))
+   #+END_SRC
+** Expand Region
+   [[https://github.com/magnars/expand-region.el][Expand-region]] expands the marked region in semantic
+   increments. Control it with +, - and 0.
+   #+BEGIN_SRC emacs-lisp
+     (use-package expand-region
+       :ensure t
+       :config 
+       (global-set-key (kbd "C-+") 'er/expand-region))
+   #+END_SRC
+** multiple cursors
+   #+BEGIN_SRC emacs-lisp
+     (use-package multiple-cursors
+       :ensure t
+       :config
+       (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+       (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+       (global-set-key (kbd "C-M-<") 'mc/mark-all-like-this)
+       (define-key mc/keymap (kbd "<return>") nil))
+   #+END_SRC
+** Flyspell
+   #+BEGIN_SRC emacs-lisp
+     ;; add here your hooks for flyspell
+     (add-hook 'org-mode-hook 'flyspell-mode)
+
+     (defun fd-switch-dictionary()
+       (interactive)
+       (let* ((dic ispell-current-dictionary)
+              (change (if (string= dic "deutsch8") "english" "deutsch8")))
+         (ispell-change-dictionary change)
+         (message "Dictionary switched from %s to %s" dic change)
+         (flyspell-buffer)
+         ))
+
+     (global-set-key (kbd "<f9>")   'fd-switch-dictionary)
+   #+END_SRC
+** undo tree
+   [[https://www.emacswiki.org/emacs/UndoTree][Undo-tree]] visualizes the undo mechanic and enables the choice to
+   switch into old undo branches if needed. Access able through C-x u.
+   #+BEGIN_SRC emacs-lisp
+   (use-package undo-tree
+     :ensure t
+     :init
+     (global-undo-tree-mode))
+   #+END_SRC
+* autocomplete
+** auto-complete-package
+   [[https://github.com/auto-complete/auto-complete][Auto-complete]]
+   #+BEGIN_SRC emacs-lisp
+     (use-package auto-complete
+       :ensure t
+       :config (ac-config-default))
+   #+END_SRC
+** org-ac
+  [[https://github.com/aki2o/org-ac][Org-ac]] means org autocomplete it is a autocomplete for org. Don't
+  use it together with company mode!!!
+  #+BEGIN_SRC emacs-lisp
+    (use-package org-ac
+      :ensure t
+      :config
+      (org-ac/config-default))
+  #+END_SRC
+* org-mode
+** hide stars
+   Hide leading stars for a better view
+   #+BEGIN_SRC emacs-lisp
+     (setq org-hide-leading-stars t)
+   #+END_SRC
+* GIT
+** magit
+   [[https://magit.vc/][Magit]] is a...
+   #+BEGIN_SRC emacs-lisp
+          (unless nil
+            (progn
+              (use-package magit
+            :ensure t
+            :bind ("C-x g" . 'magit-status)
+            :init
+            (defface magit-section-highlight
+              '((((class color) (background light)) :background "gold5")
+                (((class color) (background  dark)) :background "gold4"))
+              "Face for highlighting the current section."
+              :group 'magit-faces))
+              ))
+   #+END_SRC

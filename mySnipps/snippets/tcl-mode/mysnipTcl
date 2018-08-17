@@ -1,0 +1,18 @@
+# -*- mode: snippet -*-
+# name: mysnipTcl
+# key: tcl
+# --
+vlib work
+
+# compile add multiple
+vcom -reportprogress 300 -work work ../src/${0:filename}.vhd
+
+# simulate
+vsim -novopt -t fs work.${1:entity}(${2:architecture}) ${3:optional}
+
+# waveform choose one, comment other out or delete it
+${4:#}catch {do ${5:wave}.do}
+${6:#}add wave -position end -recursive *
+# optional a time instead of: 200 ns
+run -all
+wave zoom full

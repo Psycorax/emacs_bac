@@ -1,0 +1,24 @@
+# -*- mode: snippet -*-
+# name: mysnip_CMakeLists
+# key: cmlists
+# --
+cmake_minimum_required(VERSION 2.8)
+
+project(${1:Projectname})
+set(CMAKE_BINARY_DIR \${CMAKE_SOURCE_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH \${CMAKE_BINARY_DIR})
+set(LIBRARY_OUTPUT_PATH \${CMAKE_BINARY_DIR})
+set(CMAKE_CXX_FLAGS_DEBUG "\${CMAKE_CXX_FLAGS_DEBUG} -Wall")
+set(CMAKE_CXX_FLAGS_RELEASE "\${CMAKE_CXX_FLAGS_RELEASE} -Wall")
+
+include_directories("inc")
+file(GLOB SOURCES "src/${2:*.cpp}")
+
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+  message("debug")
+  add_executable("dbg" \${SOURCES})
+ELSE(CMAKE_BUILD_TYPE MATCHES Debug)
+  message("release")
+  add_executable(\${PROJECT_NAME} \${SOURCES})
+ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
+$0 

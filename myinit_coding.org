@@ -1,0 +1,1057 @@
+#+STARTUP: overview
+#+TITLE: myinit_coding
+#+AUTHOR: Thomas Reisinger
+#+DATE: <2018-08-08 Mi>
+
+* interface tweaks
+** basics
+   #+BEGIN_SRC emacs-lisp
+     ;; hide startup screen
+     (setq inhibit-startup-message t)
+
+     ;; hide toolbar
+     (tool-bar-mode -1)
+
+     ;; change to shorter answers
+     (fset 'yes-or-no-p 'y-or-n-p)
+
+     ;; choose backup directory to get rid of ~ files everywhere
+     (setq backup-directory-alist '(("." . "~/.emacs.d/backup")))
+   #+END_SRC
+*** line numbers in buffer
+    Don't use the alternative for Emacs <26, beacause it slows emacs
+    down. Use line at bottom for information about cursor and buffer
+    postions.
+    #+BEGIN_SRC emacs-lisp
+      ;; For Emacs > 26
+      (if (>= emacs-major-version 26)
+	  (global-display-line-numbers-mode t)
+	(global-linum-mode)
+	)
+    #+END_SRC
+** themes
+   There are several builtin themes that come with emacs out of the
+   box, you can choose between them by typing M-x
+   customize-themes. There you get an overview an can test these
+   themes.  To get them into you standard configuration just type the
+   following line into your configuration file.
+   #+BEGIN_SRC emacs-lisp
+     ;; (load-theme 'tango-dark t)
+   #+END_SRC
+
+   highlights the line with the cursor. Needs to change cursor or face
+   background, when tango-dark theme is used
+   #+BEGIN_SRC emacs-lisp
+    (global-hl-line-mode t)
+    ;; (set-face-background hl-line-face "DodgerBlue2")
+    ;; (set-cursor-color "DarkRed")
+    ;; (list-colors-display) ;; show all colors with names
+   #+END_SRC
+* keybindings
+  Here are some personalized keybindings, for open files, that are
+  often used.
+  #+BEGIN_SRC emacs-lisp
+    (global-set-key (kbd "C-x o") 'ace-window)
+    (global-set-key (kbd "<f5>") 'revert-buffer)
+    (global-set-key (kbd "\e\ei")
+		    (lambda () (interactive) (find-file "~/Documents/git/emacs/myinit_coding.org")))
+    (global-set-key (kbd "\e\ec")
+			(lambda () (interactive) (find-file "~/Tests/Programms/CMakeLists.txt")))
+    (global-set-key (kbd "\e\ey")
+			(lambda () (interactive) (find-file "~/Tests/Programms/__main__.py")))
+    (global-set-key (kbd "\e\eb")
+		    (lambda () (interactive) (find-file "~/Documents/git/bac/main.tex")))
+    (global-set-key (kbd "\e\ep")
+		    (lambda () (interactive) (find-file "~/Documents/git/pb/PrBericht__HSD_v1.tex")))
+  #+END_SRC
+* buffers
+** builtin
+   ibuffer is an enhanced builtin buffer view
+   #+BEGIN_SRC emacs-lisp
+     (defalias 'list-buffers 'ibuffer-other-window)
+   #+END_SRC
+* windows
+** builtin
+*** winner-mode
+    Saves old window configurations. Move through them by pressing
+    C-c left or right.
+    #+BEGIN_SRC emacs-lisp
+      (winner-mode 1)
+    #+END_SRC
+** ace-window
+   [[https://github.com/abo-abo/ace-window][ace-window]] switching with C-x o but then with numbers
+   #+BEGIN_SRC emacs-lisp
+     (use-package ace-window
+       :ensure t
+       :after avy
+       :init
+       (global-set-key [remap other-window] 'ace-window)
+       (custom-set-faces
+	'(aw-leading-char-face
+	  ((t (:inherit ace-jump-face-foreground :height 4.0)))))
+       )
+   #+END_SRC
+* navigation(search)
+** builtin
+   built in completion with [[https://www.masteringemacs.org/article/introduction-to-ido-mode][ido mode]] comment out ido when ivy is in
+   use
+   #+BEGIN_SRC emacs-lisp
+     ;(setq ido-enable-flex-matching t)
+     ;(setq ido-everywhere t)
+     ;(ido-mode 1)
+   #+END_SRC
+** avy
+   [[https://github.com/abo-abo/avy][Avy]] is used like a search, but just to visible text. It uses a
+   char-based decision tree.  an alternative would be [[https://github.com/winterTTr/ace-jump-mode][ace-jump-mode]].
+   Also avy-goto-char-2 is available, there you have to type in 2
+   chars of the word you are looking for, instead of one. This results
+   in a smaller decision tree.
+   #+BEGIN_SRC emacs-lisp
+     (use-package avy
+       :ensure t
+       :bind ("M-s" . avy-goto-char-2))
+   #+END_SRC
+** Ivy Swiper Counsel
+*** ivy
+    [[https://github.com/abo-abo/swiper][Ivy]]
+    Enables a completion for the minibuffer commands like, find-file,
+    switch-buffer, dired, M-x, ... . This makes life easier, because
+    there is no need to know all the options that are available. It is
+    also able to search for a command , file, expression,... in this
+    mini buffer.
+    #+BEGIN_SRC emacs-lisp
+      (use-package ivy
+	:ensure t
+	:bind ("C-x b" . ivy-switch-buffer)
+	:init (ivy-mode 1)
+	:config
+	(setq ivy-use-virtual-buffers t)
+	(setq ivy-display-style 'fancy))
+    #+END_SRC
+*** swiper
+    [[https://github.com/abo-abo/swiper][Swiper]] is a alternative to the built in isearch. Eith [[https://github.com/abo-abo/swiper][swiper]],
+    there is no more C-s and C-r needed to search forward and search
+    backward. [[https://github.com/abo-abo/swiper][Swiper]] is based on ivy-mode and needs ivy to be
+    installed.
+    #+BEGIN_SRC emacs-lisp
+      (use-package swiper
+	:ensure t
+	:after ivy
+	:bind ("C-s" . swiper)
+	      ("C-r" . swiper))
+    #+END_SRC
+*** counsel
+    #+BEGIN_SRC emacs-lisp
+      (use-package counsel
+	:ensure t
+	:after ivy
+	:bind
+	("M-x" . counsel-M-x)
+	("C-x C-f" . counsel-find-file)
+	(("M-y" . counsel-yank-pop)
+	 :map ivy-minibuffer-map
+	 ("M-y" . ivy-next-line)))
+    #+END_SRC
+* autocomplete
+** auto-complete-package
+   [[https://github.com/auto-complete/auto-complete][Auto-complete]]
+   #+BEGIN_SRC emacs-lisp
+     (use-package auto-complete
+       :ensure t
+       :config
+       (ac-flyspell-workaround))
+   #+END_SRC
+*** org-ac
+    [[https://github.com/aki2o/org-ac][Org-ac]] means org autocomplete it is a autocomplete for org. Don't
+    use it together with company mode!!! This enables autocomplete in
+    org-mode automatically.
+    #+BEGIN_SRC emacs-lisp
+     (use-package org-ac
+       :ensure t
+       :config
+       (org-ac/config-default))
+    #+END_SRC
+** Company
+   [[https://github.com/company-mode/company-mode][Company]]
+   #+BEGIN_SRC emacs-lisp
+     (use-package company
+       :ensure t
+       :config
+       (setq company-idle-delay 0) ;if it causes problems changes it to 1
+       (setq company-minimum-prefix-length 2))
+   #+END_SRC
+* misc features
+** try
+   This package allows you to [[https://github.com/larstvei/Try][try]] a package before installing it.
+   #+BEGIN_SRC emacs-lisp
+     (use-package try
+       :ensure t)
+   #+END_SRC
+** which key
+   [[https://github.com/justbur/emacs-which-key][Whick-key]] shows all possible further key-binding. For example type
+   "C-x" then it shows all further more bindings that can follow after
+   "C-x".
+   #+BEGIN_SRC emacs-lisp
+     (use-package which-key
+       :ensure t
+       :custom (which-key-idle-delay 1.0 "time delay for which-key to pop up")
+       :config
+       (which-key-mode))
+   #+END_SRC
+** hungry-delete
+   [[https://github.com/nflath/hungry-delete][Hungry-delete]] deletes all whitespaces with one delete.
+   #+BEGIN_SRC emacs-lisp
+     (use-package hungry-delete
+       :ensure t
+       :config
+       (global-hungry-delete-mode))
+   #+END_SRC
+** Expand Region
+   [[https://github.com/magnars/expand-region.el][Expand-region]] expands the marked region in semantic
+   increments. Control it with +, - and 0.
+   #+BEGIN_SRC emacs-lisp
+     (use-package expand-region
+       :ensure t
+       :config
+       (global-set-key (kbd "C-+") 'er/expand-region))
+   #+END_SRC
+** multiple cursors
+   [[https://github.com/magnars/multiple-cursors.el][multiple-cursors]]
+   #+BEGIN_SRC emacs-lisp
+     (use-package multiple-cursors
+       :ensure t
+       :config
+       (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+       (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+       (global-set-key (kbd "C-M-<") 'mc/mark-all-like-this)
+       (define-key mc/keymap (kbd "<return>") nil))
+   #+END_SRC
+** Flyspell
+   function for [[https://www.emacswiki.org/emacs/FlySpell][flyspell]] to change language (german and english)
+   #+BEGIN_SRC emacs-lisp
+     (defun fd-switch-dictionary()
+       (interactive)
+       (let* ((dic ispell-current-dictionary)
+	      (change (if (string= dic "deutsch8") "english" "deutsch8")))
+	 (ispell-change-dictionary change)
+	 (flyspell-buffer)
+	 (message "Dictionary switched from %s to %s" dic change)
+	 ))
+
+     (global-set-key (kbd "<f9>")   'fd-switch-dictionary)
+   #+END_SRC
+** undo tree
+   [[https://www.emacswiki.org/emacs/UndoTree][Undo-tree]] visualizes the undo mechanic and enables the choice to
+   switch into old undo branches if needed. Access able through C-x u.
+   With arrows run through the tree, d vor diff, t vor timestamp and h
+   for general help.
+   #+BEGIN_SRC emacs-lisp
+   (use-package undo-tree
+     :ensure t
+     :init
+     (global-undo-tree-mode))
+   #+END_SRC
+** smartparens
+   [[https://github.com/Fuco1/smartparens][Smartparens]] is a package, that adds always the closing parenthesis
+   as well. If something is marked it can use parenthesis around the
+   marked area. It also can make the closing pair for some languages
+   like html as well.
+   #+BEGIN_SRC emacs-lisp
+     (use-package smartparens
+       :ensure t)
+   #+END_SRC
+** hydra package
+   [[https://github.com/abo-abo/hydra][hydra]]
+   #+BEGIN_SRC emacs-lisp
+     (use-package hydra
+       :ensure t)
+   #+END_SRC
+** projectile
+   [[https://github.com/bbatsov/projectile][projectile]]
+   #+BEGIN_SRC emacs-lisp
+     ;; projectile
+     (use-package projectile
+       :ensure t
+       :config
+       (projectile-global-mode)
+       (setq projectile-completion-system 'ivy))
+
+     ;; (use-package counsel-projectile
+     ;;	  :ensure t
+     ;;	  :config
+     ;;	  (counsel-projectile-on))
+   #+END_SRC
+* GIT
+** magit
+   [[https://magit.vc/][Magit]]
+   #+BEGIN_SRC emacs-lisp
+     (unless nil
+       (progn
+	 (use-package magit
+	   :ensure t
+	   :bind ("C-x g" . 'magit-status)
+	   :init
+	   (defface magit-section-highlight
+	     '((((class color) (background light)) :background "gold5")
+	       (((class color) (background  dark)) :background "gold4"))
+	     "Face for highlighting the current section."
+	     :group 'magit-faces))
+	 ))
+   #+END_SRC
+* Programming
+  Here are some packages and configurations that aren't language
+  specific.
+** basic functions
+   Own defined functions
+   #+BEGIN_SRC emacs-lisp
+     ;; func to check filedirectory
+     (defun this-file-in-dir (x)
+       (setq curDir (file-name-directory buffer-file-name))
+       (setq count (- (length(split-string curDir "/")) 2))
+       (setq dir (substring (nth count (split-string curDir "/"))))
+       (equal dir x))
+
+     ;; func to check directory, of variable default-directory
+     (defun default-in-dir (x)
+       (setq curDir default-directory)
+       (setq count (- (length(split-string curDir "/")) 2))
+       (setq dir (substring (nth count (split-string curDir "/"))))
+       (equal dir x))
+   #+END_SRC
+** packages
+   [[https://github.com/Wilfred/ag.el][ag]]
+   [[https://github.com/jacktasia/dumb-jump][dumb-jump]]
+   [[https://github.com/joaotavora/yasnippet][yasnippet]]
+   [[https://github.com/AndreaCrotti/yasnippet-snippets][yasnippet-snippets]]
+   Source of company back-end function: [[https://emacs.stackexchange.com/questions/10431/get-company-to-show-suggestions-for-yasnippet-names][this func here]] [[https://github.com/company-mode/company-mode/blob/master/company-yasnippet.el][for this]]
+   [[http://www.flycheck.org/en/latest/][flycheck]]
+   #+BEGIN_SRC emacs-lisp
+     (use-package ag
+       :ensure t
+       :bind (("M-g s" . ag)
+	      ("M-g p" . ag-project)
+	      ("M-g P" . ag-project-at-point)))
+
+     (use-package dumb-jump
+       :ensure t
+       :bind (("M-g j" . dumb-jump-go)
+	      ("M-g J" . dumb-jump-go-other-window)
+	      ("M-g b" . dumb-jump-back)))
+
+     (use-package yasnippet
+       :ensure t
+       :config
+       (use-package yasnippet-snippets
+	 :ensure t)
+       (yas-reload-all))
+
+     ;; Add yasnippet support for all company backends
+     (defvar company-mode/enable-yas t
+       "Enable yasnippet for all backends.")
+
+     (defun company-mode/backend-with-yas (backend)
+       (if (or (not company-mode/enable-yas) (and (listp backend) (member 'company-yasnippet backend)))
+	   backend
+	 (append (if (consp backend) backend (list backend))
+		 '(:with company-yasnippet))))
+
+     (setq company-backends (mapcar #'company-mode/backend-with-yas company-backends))
+     
+     (use-package flycheck
+       :ensure t
+       :init
+       (global-flycheck-mode t))
+   #+END_SRC
+** beautifier
+   own beautifier
+   #+BEGIN_SRC emacs-lisp
+     ;; beautifier
+     ;; if needed without tabs just change tabify
+     ;; to untabify for dumb editors
+     (defun beautify-me (&optional noTabs)
+       "beautify whole buffer"
+       (interactive)
+       (delete-trailing-whitespace)
+       (indent-region (point-min) (point-max) nil)
+       (if noTabs
+	   (untabify (point-min) (point-max))
+	 (tabify (point-min) (point-max))))
+
+     ;; beautifier for emacs-lisp need to be called with t interactive
+     ;; tabify destroys the hydra layout
+     (defun beautify-el ()
+       (interactive)
+       (beautify-me "t"))
+   #+END_SRC
+* org-mode
+** org-elpa
+   Gets installed with org-plus-contrib in init.el file. This is,
+   because org must be installed before org is used in any way.	 The
+   Following code must be in the init.el file, directly after
+   installing use-package!!!
+
+   (use-package org
+   :ensure org-plus-contrib
+   :pin org)
+** hide stars
+   Hide leading stars for a better view
+   #+BEGIN_SRC emacs-lisp
+     (setq org-hide-leading-stars t)
+   #+END_SRC
+** hydra hooks
+   #+BEGIN_SRC emacs-lisp
+     (defhydra hydra-org (:color blue :hint nil)
+       "
+     _b_: beautify src block   _p_: nil    _t_: nil
+     _u_: nil                  _e_: nil    _Q_: nil
+     ^ ^                       _s_: nil    _C_: nil
+     "
+       ("b" (progn (org-edit-special)(beautify-me "t")(org-edit-src-exit)))
+       ("u" (nil))
+       ("p" (nil))
+       ("e" (nil))
+       ("s" (nil))
+       ("t" (nil))
+       ("Q" (nil))
+       ("C" (nil)))
+
+     ;; bind hydra to vhdl mode
+     (add-hook 'org-mode-hook
+	       (lambda () (local-set-key (kbd "<f8>") 'hydra-org/body)))
+     (add-hook 'org-mode-hook 'flyspell-mode)
+     (add-hook 'org-mode-hook 'smartparens-mode)
+   #+END_SRC
+* elisp
+  #+BEGIN_SRC emacs-lisp
+    ;; hooks
+    (add-hook 'emacs-lisp-mode-hook 'smartparens-mode)
+    (add-hook 'emacs-lisp-mode-hook 'company-mode)
+    (add-hook 'emacs-lisp-mode-hook 'yas-minor-mode)
+    (add-hook 'emacs-lisp-mode-hook
+	      (lambda () (local-set-key (kbd "C-c C-b") 'beautify-el)))
+  #+END_SRC
+* C/C++
+  change indentation (note: done in styl)):
+  (setq c-basic-offset 2)
+** mkdir build debug
+   #+BEGIN_SRC emacs-lisp
+     ;; hydra for the project management
+     (defhydra hydra-C-Cpp (:color blue :hint nil)
+       "
+     _b_: Beautify tabify     _t_: build Tags     _S_: Start debugging
+     _u_: beautify Untabify   _d_: build Debug    _C_: Clean project
+     ^ ^                      _r_: build Release
+	  "
+       ("b" (beautify-me))
+       ("u" (beautify-me "t"))
+       ("t" (build-ctags-C-Cpp))
+       ("d" (build-C-Cpp "d"))
+       ("r" (build-C-Cpp))
+       ("S" (debug-C-Cpp) :color green)
+       ("C" (clear-all-C-Cpp) :color red))
+
+     ;; bind hydra to c and cpp mode maps
+     (add-hook 'c-mode-hook
+	       (lambda () (local-set-key (kbd "<f8>") 'hydra-C-Cpp/body)))
+     (add-hook 'c++-mode-hook
+	       (lambda () (local-set-key (kbd "<f8>") 'hydra-C-Cpp/body)))
+
+     ;; tagging system with ctags
+     (defun build-ctags-C-Cpp ()
+       (interactive)
+       (message "building project tags")
+       (cd (concat (file-name-directory buffer-file-name) "../"))
+       (shell-command (concat "ctags -e -R --extra=+fq --exclude=debug --exclude=release --exclude=bin --exclude=tests --exclude=doc --exclude=.git --exclude=public -f TAGS ."))
+       (visit-tags-table "TAGS")
+       (cd "./src")
+       (message "tags built successfully"))
+
+     ;; clear build directories
+     ;; clear TAGS table as well, dont do this in big projects
+     ;; it will take a while to rebuild the TAGS table
+     (defun clear-all-C-Cpp ()
+       (if (file-directory-p "../debug")
+	   (shell-command "rm -r ../debug"))
+       (if (file-directory-p "../release")
+	   (shell-command "rm -r ../release"))
+       (if (file-directory-p "../bin")
+	   (shell-command "rm -r ../bin"))
+       (if (file-exists-p "../TAGS")
+	   (shell-command "rm ../TAGS"))
+       )
+
+     ;; creates a directory history for c and cpp projects
+     (defun mkdir-C-Cpp ()
+       (interactive)
+       (message "making default C-Cpp project directory")
+       (setq myFileName (nth 0 (split-string (nth (-(length(split-string (buffer-file-name) "/")) 1)(split-string (buffer-file-name) "/")) "\\.")))
+       (setq myFileEnding (substring (nth 1 (split-string (nth (-(length(split-string (buffer-file-name) "/")) 1)(split-string (buffer-file-name) "/")) "\\.")) 0))
+       (if (equal myFileEnding "txt")
+	   (progn
+	     (message "Insert Directoryname: ")
+	     (setq myDirName (read-from-minibuffer "Projecdirectoryname: "))
+	     (shell-command (concat "mkdir -p " myDirName "/{src,inc,doc,tests}"))
+	     (shell-command (concat "mv " myFileName "." myFileEnding " ./" myDirName "/" myFileName "." myFileEnding))
+	     (kill-buffer (concat myFileName "." myFileEnding))
+	     (message myDirName)
+	     (cd (concat "~/Tests/Programms/"myDirName"/src"))
+	     (find-file "main.cpp")
+	     )))
+
+     ;; yasnippet contains a snippet for CMakeLists.txt file builds a
+     ;; release and dbg version, cut it out if not needed, or project is to
+     ;; big to be always builded in two ways
+     (defun build-C-Cpp (&optional type)
+       (interactive)
+       (message "executing cmake and make(need to be in the src directory!)")
+       ;; check if directories exist
+       (unless (file-directory-p "../bin")
+	 (progn (mkdir "../bin")))
+       (if (equal type "d")
+	   (progn
+	     (unless (file-directory-p "../debug")
+	       (progn (mkdir "../debug")))
+	     (cd (concat (file-name-directory buffer-file-name) "../debug"))
+	     (shell-command "cmake -DCMAKE_BUILD_TYPE=Debug ..")
+	     (compile "make -C .")
+	     )
+	 (progn
+	   (unless (file-directory-p "../release")
+	     (progn (mkdir "../release")))
+	   (cd (concat (file-name-directory buffer-file-name) "../release"))
+	   (shell-command "cmake -DCMAKE_BUILD_TYPE=Release ..")
+	   (compile "make -C .")
+	   ))
+       (cd (concat (file-name-directory buffer-file-name) "../src")))
+
+     ;; starts gdb and opens it in many windows mode
+     (defun debug-C-Cpp ()
+       (interactive)
+       (message "debug C-Cpp Project")
+       (gdb-enable-debug)
+       (gdb-many-windows)
+       (gdb "gdb -i=mi ../bin/dbg")
+       )
+   #+END_SRC
+** style
+   #+BEGIN_SRC emacs-lisp
+     (defun set-my-style-c-cpp ()
+       (c-set-style "stroustrup")
+       (setq tab-width 2)
+       (setq c-basic-offset 2))
+
+     (add-hook 'c-mode-hook 'set-my-style-c-cpp)
+     (add-hook 'c++-mode-hook 'set-my-style-c-cpp)
+   #+END_SRC
+** packages
+   [[https://github.com/Sarcasm/irony-mode][irony]]
+   [[https://github.com/Sarcasm/company-irony][company-irony]]
+   [[https://github.com/hotpxl/company-irony-c-headers][company-irony-c-headers]]
+   #+BEGIN_SRC emacs-lisp
+    ;; with or without irony
+    (setq use_irony nil)
+
+    ;; add hooks
+    (add-hook 'c-mode-hook 'company-mode)
+    (add-hook 'c++-mode-hook 'company-mode)
+    (add-hook 'cmake-mode-hook 'company-mode)
+
+    (add-hook 'c-mode-hook 'yas-minor-mode)
+    (add-hook 'c++-mode-hook 'yas-minor-mode)
+    (add-hook 'cmake-mode-hook 'yas-minor-mode)
+
+    (add-hook 'c-mode-hook 'smartparens-mode)
+    (add-hook 'c++-mode-hook 'smartparens-mode)
+    (add-hook 'cmake-mode-hook 'smartparens-mode)
+
+    (if use_irony
+	(progn
+	  ;; you need to run once: M-x irony-install-server
+	  (use-package irony
+	    :ensure t
+	    :config
+	    (add-hook 'c++-mode-hook 'irony-mode)
+	    (add-hook 'c-mode-hook 'irony-mode)
+	    (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
+
+	  (use-package company-irony
+	    :ensure t
+	    :config
+	    (add-to-list 'company-backends 'company-irony))
+
+	  (use-package company-irony-c-headers
+	    :ensure t)
+
+	  (eval-after-load 'company
+	    '(add-to-list
+	      'company-backends '(company-irony-c-headers company-irony)))
+	  ))
+   #+END_SRC
+* python
+  [[https://github.com/jorgenschaefer/elpy][Elpy-github]]
+  [[https://elpy.readthedocs.io/en/latest/index.html][Elpy-website]]
+** hydra mkdir tags clear
+   #+BEGIN_SRC emacs-lisp
+     ;; hydra for the project management
+     (defhydra hydra-py (:color blue :hint nil)
+       "
+     _b_: Beautify tabify     _p_: run Python         _E_: make Executable
+     _u_: beautify Untabify   _e_: Evaluate buffer    _Q_: Quit python
+     _t_: build Tags          _s_: Switch to Shell    _C_: Clean project
+     "
+       ("b" (beautify-me))
+       ("u" (beautify-me "t"))
+       ("t" (build-ctags-py))
+       ("p" (run-python))
+       ("e" (python-shell-send-buffer))
+       ("s" (python-shell-switch-to-shell))
+       ("E" (make-executable-py))
+       ("Q" (progn (python-shell-switch-to-shell)(comint-send-eof)(delete-window)))
+       ("C" (clear-all-py) :color red))
+
+     ;; bind hydra to python mode
+     (add-hook 'python-mode-hook
+	       (lambda () (local-set-key (kbd "<f8>") 'hydra-py/body)))
+
+     ;; creates a directory python projects
+     (defun mkdir-py ()
+       (interactive)
+       (message "making default python project directory")
+       (setq myFileName (nth 0 (split-string (nth (-(length(split-string (buffer-file-name) "/")) 1)(split-string (buffer-file-name) "/")) "\\.")))
+       (setq myFileEnding (substring (nth 1 (split-string (nth (-(length(split-string (buffer-file-name) "/")) 1)(split-string (buffer-file-name) "/")) "\\.")) 0))
+       (if (equal myFileEnding "py")
+	   (progn
+	     (message "Insert Directoryname: ")
+	     (setq myDirName (read-from-minibuffer "Projecdirectoryname: "))
+	     (shell-command (concat "mkdir -p " myDirName "/{lib,doc,tests}"))
+	     (shell-command (concat "mv " myFileName "." myFileEnding " ./" myDirName "/" myFileName "." myFileEnding))
+	     (kill-buffer (concat myFileName "." myFileEnding))
+	     (message myDirName)
+	     (cd (concat "~/Tests/Programms/"myDirName))
+	     (find-file (concat myFileName"." myFileEnding)
+			))))
+
+     ;; tagging system with ctags
+     (defun build-ctags-py ()
+       (interactive)
+       (message "building project tags")
+       (if (this-file-in-dir "lib")
+	   (progn
+	     (cd (concat (file-name-directory buffer-file-name) "../"))
+	     (message "in dir lib")))
+       (if (file-directory-p "./lib")
+	   (progn
+	     (shell-command (concat "ctags -e -R --extra=+fq --exclude=build --exclude=dist --exclude=doc --exclude=test --exclude=.git --exclude=main.spec -f TAGS ."))
+	     (visit-tags-table "TAGS")
+	     (message "tags built successfully"))))
+
+     ;; clear build directories
+     ;; clear TAGS table as well, dont do this in big projects
+     ;; it will take a while to rebuild the TAGS table
+     (defun clear-all-py ()
+       (message "clear all")
+       (if (this-file-in-dir "lib")
+	   (progn
+	     (cd (concat (file-name-directory buffer-file-name) "../"))
+	     (message "in dir lib")))
+       (if (file-directory-p "./build")
+	   (shell-command "rm -r ./build"))
+       (if (file-directory-p "./dist")
+	   (shell-command "rm -r ./dist"))
+       (if (file-exists-p "./main.spec")
+	   (shell-command "rm -r ./main.spec"))
+       (if (file-exists-p "./TAGS")
+	   (shell-command "rm ./TAGS")))
+
+     (defun make-executable-py ()
+       (if (this-file-in-dir "lib")
+	   (cd (concat (file-name-directory buffer-file-name) "../")))
+       (if (equal (length (file-expand-wildcards "*.py")) 1)
+	   (shell-command (concat "pyinstaller *.py"))))
+   #+END_SRC
+** packages
+   #+BEGIN_SRC emacs-lisp
+    ;; with or without elpy
+    (setq use_elpy nil)
+
+    ;; add hooks
+    (add-hook 'python-mode-hook 'company-mode)
+    (add-hook 'python-mode-hook 'yas-minor-mode)
+    (add-hook 'python-mode-hook 'smartparens-mode)
+
+    (if use_elpy
+      (progn
+	(use-package elpy
+	  :ensure t
+	  :config
+	  (elpy-enable))))
+   #+END_SRC
+* LaTeX
+  packages for latex auf linux: sudo apt-get install
+  texlive-latex-recommended texlive-latex-extra
+  texlive-fonts-recommended texlive-base texlive-latex-base
+** hydra mkdir build clear
+   #+BEGIN_SRC emacs-lisp
+     ;; hydra for the project management
+     (defhydra hydra-tex (:color blue :hint nil)
+       "
+     _b_: Build PDF     _p_: nil    _t_: nil
+     _u_: nil           _e_: nil    _Q_: nil
+     ^ ^                _s_: nil    _C_: Clear directory
+     "
+       ("b" (build-latex))
+       ("u" (nil))
+       ("p" (nil))
+       ("e" (nil))
+       ("s" (nil))
+       ("t" (nil))
+       ("Q" (nil))
+       ("C" (clear-all-tex)))
+
+     ;; bind hydra to vhdl mode
+     (add-hook 'latex-mode-hook
+	       (lambda () (local-set-key (kbd "<f8>") 'hydra-tex/body)))
+
+     (defun build-latex ()
+       (interactive)
+       (message "building pdf")
+       (if (this-file-in-dir "chapters")
+	   (cd (concat (file-name-directory buffer-file-name) "../")))
+       ;; check if in a valid latex dir
+       (if (equal (length (file-expand-wildcards "*.tex")) 1)
+	   (progn
+	     ;; check if directories exist otherwise create them
+	     (unless (file-directory-p "./build")
+	       (progn (mkdir "./build")))
+	     (if (file-directory-p "./front")
+		 (progn (unless (file-directory-p "./build/front")
+			  (progn (mkdir "./build/front")))))
+	     (if (file-directory-p "./back")
+		 (progn (unless (file-directory-p "./build/back")
+			  (progn (mkdir "./build/back")))))
+	     (if (file-directory-p "./chapters")
+		 (progn (unless (file-directory-p "./build/chapters")
+			  (progn (mkdir "./build/chapters")))))
+	     (unless (file-exists-p "./build/main.bcf")
+	       (progn (shell-command (concat "pdflatex -synctex=1 -halt-on-error -output-directory=build *.tex"))))
+	     (shell-command (concat "biber ./build/main"))
+	     (shell-command (concat "pdflatex -synctex=1 -halt-on-error -output-directory=build *.tex"))
+	     (message "build pdf executed")
+	     (end-of-buffer-other-window 0))
+	 (progn
+	   (setq myFileEnding (substring (nth 1 (split-string (nth (-(length(split-string (buffer-file-name) "/")) 1)(split-string (buffer-file-name) "/")) "\\.")) 0))
+	   (if (equal myFileEnding "tex")
+	       (progn (unless (file-directory-p "./build")
+			(progn (mkdir "./build")))
+		      (shell-command (concat "pdflatex -synctex=1 -halt-on-error -output-directory=build " buffer-file-name)))
+	     (message "no tex file found, try to execute command from your main tex file")))))
+
+     ;; creates a directory for vhdl projects
+     (defun mkdir-tex ()
+       (interactive)
+       (message "making default latex project directory")
+       (setq myFileName (nth 0 (split-string (nth (-(length(split-string (buffer-file-name) "/")) 1)(split-string (buffer-file-name) "/")) "\\.")))
+       (setq myFileEnding (substring (nth 1 (split-string (nth (-(length(split-string (buffer-file-name) "/")) 1)(split-string (buffer-file-name) "/")) "\\.")) 0))
+       (if (equal myFileEnding "tex")
+	   (progn
+	     (setq myDirName (read-from-minibuffer "Projec directory name: "))
+	     (shell-command (concat "mkdir -p " myDirName "/images"))
+	     (shell-command (concat "mv " myFileName "." myFileEnding " ./" myDirName "/" myFileName "." myFileEnding))
+	     (kill-buffer (concat myFileName "." myFileEnding))
+	     (cd (concat "~/Tests/Programms/"myDirName"/"))
+	     (find-file (concat myFileName"." myFileEnding)))))
+
+     ;; clear tex directory
+     (defun clear-all-tex ()
+       (message "clear all")
+       (if (not (file-directory-p "./images"))
+	   (progn
+	     (cd (concat (file-name-directory buffer-file-name) "../"))
+	     (message "one out")))
+       (if (file-directory-p "./images")
+	   (progn
+	     (if (file-directory-p "./build")
+		 (shell-command "rm -r ./build")
+	       (message "nothing to clear")))
+	 (message "in wrong directory")))
+   #+END_SRC
+** packages
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'latex-mode-hook 'flyspell-mode)
+     (add-hook 'latex-mode-hook 'company-mode)
+     (add-hook 'latex-mode-hook 'yas-minor-mode)
+     (add-hook 'latex-mode-hook 'smartparens-mode)
+   #+END_SRC
+* vhdl
+** hydra
+   #+BEGIN_SRC emacs-lisp
+     ;; hydra for the project management
+     (defhydra hydra-vhdl (:color blue :hint nil)
+       "
+     _b_: Beautify        _s_: set Tcl file        _t_: build tags table
+     _c_: Compile(ghdl)   _S_: Simulate modelsim   _C_: Clear directory
+     "
+       ("b" (vhdl-beautify-buffer))
+       ("c" (compile-vhdl-ghdl))
+       ("s" (find-set-tcl-file))
+       ("S" (sim-vhdl))
+       ("t" (build-ctags-vhdl))
+       ("C" (clear-all-vhdl)))
+
+     ;; bind hydra to vhdl mode
+     (add-hook 'vhdl-mode-hook
+	       (lambda () (local-set-key (kbd "<f8>") 'hydra-vhdl/body)))
+
+     (setq my-modelsim-path "~/intelFPGA_pro/18.0/modelsim_ase/linuxaloem/")
+     (setq my-sim-tcl-file "")
+
+     (defun find-set-tcl-file ()
+       (if (this-file-in-dir "src")
+	   (progn
+	     (message "in src")
+	     (cd (concat (file-name-directory buffer-file-name) "../sim"))))
+       (setq tcl-file (read-from-minibuffer "(optional) tcl-file: "))
+       (if (equal (nth 1 (split-string tcl-file "\\.")) "tcl")
+	   (progn
+	     (message "valid input")
+	     (setq my-sim-tcl-file tcl-file)))
+       (if (equal (length (file-expand-wildcards "*.tcl")) 1)
+	   (progn
+	     (message "found exactly one tcl file")
+	     (setq my-sim-tcl-file (nth 0 (file-expand-wildcards "*.tcl")))))
+       (if (equal my-sim-tcl-file "")
+	   (message "no tcl file found")
+	 (message (concat "sim tcl file set to: " my-sim-tcl-file))))
+
+     (defun sim-vhdl ()
+       (if (this-file-in-dir "src")
+	   (progn (message "in src")
+		  (cd (concat (file-name-directory buffer-file-name) "../sim")))
+	 (cd (file-name-directory buffer-file-name)))
+       (message (concat "now in " (file-name-directory buffer-file-name)))
+       (if (default-in-dir "sim")
+	   (shell-command (concat my-modelsim-path "./vsim -do \"do " my-sim-tcl-file "\" &"))
+	 (message "wrong folder, need to be in src or sim folder")))
+
+     ;; creates a directory for vhdl projects
+     (defun mkdir-vhdl ()
+       (interactive)
+       (message "making default vhdl project directory")
+       (setq myFileName (nth 0 (split-string (nth (-(length(split-string (buffer-file-name) "/")) 1)(split-string (buffer-file-name) "/")) "\\.")))
+       (setq myFileEnding (substring (nth 1 (split-string (nth (-(length(split-string (buffer-file-name) "/")) 1)(split-string (buffer-file-name) "/")) "\\.")) 0))
+       (if (equal myFileEnding "vhd")
+	   (progn
+	     (setq myDirName (read-from-minibuffer "Projec directory name: "))
+	     (shell-command (concat "mkdir -p " myDirName "/{sim/work,syn,doc,src/work}"))
+	     (shell-command (concat "mv " myFileName "." myFileEnding " ./" myDirName "/src/" myFileName "." myFileEnding))
+	     (kill-buffer (concat myFileName "." myFileEnding))
+	     (cd (concat "~/Tests/Programms/"myDirName"/src/"))
+	     (find-file (concat myFileName"." myFileEnding)))))
+
+     ;; clear build directories
+     ;; clear TAGS table as well, dont do this in big projects
+     ;; it will take a while to rebuild the TAGS table
+     (defun clear-all-vhdl ()
+       (message "clear all")
+       (if (this-file-in-dir "src")
+	   (progn
+	     (cd (concat (file-name-directory buffer-file-name) "../"))))
+       (if (file-directory-p "./src/work")
+	   (progn
+	     (shell-command "rm -r ./src/work")
+	     (shell-command "mkdir -p ./src/work")))
+       (if (file-directory-p "./sim/work")
+	   (progn
+	     (shell-command "rm -r ./sim/work")
+	     (shell-command "mkdir -p ./sim/work")))
+       (if (file-exists-p "./src/TAGS")
+	   (shell-command "rm ./src/TAGS")))
+
+     ;; tagging system with ctags
+     (defun build-ctags-vhdl ()
+       (interactive)
+       (message "building project tags")
+       (if (this-file-in-dir "src")
+	   (progn
+	     (cd (file-name-directory buffer-file-name))
+	     (shell-command (concat "ctags -e -R --extra=+fq --exclude=work -f TAGS ."))
+	     (visit-tags-table "TAGS")
+	     (message "tags built successfully"))))
+
+     (defun compile-vhdl-ghdl ()
+       (cd (file-name-directory buffer-file-name))
+       (vhdl-set-compiler "GHDL")
+       (vhdl-compile))
+   #+END_SRC
+** packages
+   #+BEGIN_SRC emacs-lisp
+     ;; add hooks
+     (add-hook 'vhdl-mode-hook 'smartparens-mode)
+     (add-hook 'vhdl-mode-hook 'company-mode)
+     (add-hook 'vhdl-mode-hook 'yas-minor-mode)
+     (add-hook 'tcl-mode-hook 'smartparens-mode)
+     (add-hook 'tcl-mode-hook 'company-mode)
+     (add-hook 'tcl-mode-hook 'yas-minor-mode)
+   #+END_SRC
+* GUI
+** set GUI elements here
+   #+BEGIN_SRC emacs-lisp
+     ;; themes
+     (setq use-zenburn t)
+     (setq use-hemisu-dark nil)
+     ;; GUI elements
+     (setq use-tabbar-ruler t)
+     (setq use-org-bullets t)
+     (setq use-treemacs t)
+   #+END_SRC
+** extern themes
+   themes made by the community
+   [[https://pawelbx.github.io/emacs-theme-gallery/][theme galery 1]]
+   [[https://emacsthemes.com/][theme galery 2]]
+*** zenburn
+    [[https://github.com/bbatsov/zenburn-emacs][zenburn-theme]]
+    #+BEGIN_SRC emacs-lisp
+      (if use-zenburn
+	  (use-package zenburn-theme
+	    :ensure t
+	    :config (load-theme 'zenburn t)))
+    #+END_SRC
+*** hemisu
+    [[https://github.com/andrzejsliwa/hemisu-theme][hemisu-theme]]
+    #+BEGIN_SRC emacs-lisp
+      (if use-hemisu-dark
+	  (use-package hemisu-theme
+	    :ensure t
+	    :config (load-theme 'hemisu-dark t)))
+    #+END_SRC
+** tabbar ruler
+   #+BEGIN_SRC emacs-lisp
+     (if use-tabbar-ruler
+	 (progn
+	   (use-package tabbar
+	     :ensure t
+	     :config (tabbar-mode 1)
+	     )
+
+	   (use-package powerline
+	     :ensure t
+	     :config
+	     (powerline-default-theme))
+
+	   (use-package mode-icons
+	     :ensure t
+	     :config
+	     (mode-icons-mode))
+
+	   (use-package tabbar-ruler
+	     :ensure t
+	     :init
+	     (setq tabbar-ruler-global-tabbar t)    ; get tabbar
+	     (setq tabbar-ruler-global-ruler t)     ; get global ruler
+	     (setq tabbar-ruler-popup-menu t)              ; get popup menu.
+	     (setq tabbar-ruler-popup-toolbar nil)   ; get popup toolbar
+	     (setq tabbar-ruler-popup-scrollbar t))  ; show scroll-bar on mouse-move
+	   ))
+   #+END_SRC
+   [[https://github.com/dholm/tabbar][tabbar]]
+   [[https://github.com/milkypostman/powerline][powerline]]
+   [[https://github.com/ryuslash/mode-icons][mode-icons]]
+   [[https://github.com/mattfidler/tabbar-ruler.el][tabbar-ruler]]
+** orgbullets
+   [[https://github.com/sabof/org-bullets/blob/master/org-bullets.el][orgbullets]]
+   #+BEGIN_SRC emacs-lisp
+     (if use-org-bullets
+	 (progn
+	   (use-package org-bullets
+	     :ensure t
+	     :custom
+	     (org-bullets-bullet-list '("-")); symbol instead of stars
+	     ;;(org-ellipsis "_")		; symbol when chapter is collapsed
+	     :hook
+	     (org-mode . org-bullets-mode))))
+   #+END_SRC
+*** bullets(some bullets to use)
+    default: "◉ ○ ✸ ✿"
+    large: ♥ ● ◇ ✚ ✜ ☯ ◆ ♠ ♣ ♦ ☢ ❀ ◆ ◖ ▶
+    small: ► • ★ ▸
+    for ellipsis: ▼ ⤵ ↴ ⬎ ⤷ … ⋱
+** treemacs
+   [[https://github.com/Alexander-Miller/treemacs][treemacs]]
+   #+BEGIN_SRC emacs-lisp
+     (if use-treemacs
+	 (progn (use-package treemacs
+		  :ensure t
+		  :defer t
+		  :init
+		  (with-eval-after-load 'winum
+		    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+		  :config
+		  (progn
+		    (setq treemacs-collapse-dirs             (if (executable-find "python") 3 0)
+			  treemacs-deferred-git-apply-delay  0.5
+			  treemacs-display-in-side-window    nil
+			  treemacs-file-event-delay          5000
+			  treemacs-file-follow-delay         0.2
+			  treemacs-follow-after-init         t
+			  treemacs-follow-recenter-distance  0.1
+			  treemacs-goto-tag-strategy         'refetch-index
+			  treemacs-indentation               2
+			  treemacs-indentation-string                " "
+			  treemacs-is-never-other-window     nil
+			  treemacs-no-png-images             nil
+			  treemacs-project-follow-cleanup    nil
+			  treemacs-persist-file              (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+			  treemacs-recenter-after-file-follow nil
+			  treemacs-recenter-after-tag-follow nil
+			  treemacs-show-hidden-files         t
+			  treemacs-silent-filewatch          nil
+			  treemacs-silent-refresh            nil
+			  treemacs-sorting                   'alphabetic-desc
+			  treemacs-space-between-root-nodes  t
+			  treemacs-tag-follow-cleanup                t
+			  treemacs-tag-follow-delay          1.5
+			  treemacs-width                     35)
+
+		    ;; The default width and height of the icons is 22 pixels. If you are
+		    ;; using a Hi-DPI display, uncomment this to double the icon size.
+		    ;;(treemacs-resize-icons 44)
+
+		    (define-key treemacs-mode-map [mouse-1] #'treemacs-single-click-expand-action)
+
+		    (treemacs-follow-mode t)
+		    (treemacs-filewatch-mode t)
+		    (treemacs-fringe-indicator-mode t)
+		    (pcase (cons (not (null (executable-find "git")))
+				 (not (null (executable-find "python3"))))
+		      (`(t . t)
+		       (treemacs-git-mode 'extended))
+		      (`(t . _)
+		       (treemacs-git-mode 'simple))))
+		  :bind
+		  (:map global-map
+			("M-0"       . treemacs-select-window)
+			("C-x t 1"   . treemacs-delete-other-windows)
+			("C-x t t"   . treemacs)
+			("C-x t B"   . treemacs-bookmark)
+			("C-x t C-t" . treemacs-find-file)
+			("C-x t M-t" . treemacs-find-tag)))
+
+		(use-package treemacs-projectile
+		  :after treemacs projectile
+		  :ensure t)))
+   #+END_SRC
+* which operation system type
+  [[http://ergoemacs.org/emacs/elisp_determine_OS_version.html][Quelle]]
+  #+BEGIN_SRC emacs-lisp
+    ;; check OS type
+    (cond
+     ((string-equal system-type "windows-nt") ; Microsoft Windows
+      (progn
+	(message "Microsoft Windows")))
+     ((string-equal system-type "darwin") ; Mac OS X
+      (progn
+	(message "Mac OS X")))
+     ((string-equal system-type "gnu/linux") ; linux
+      (progn
+	(message "Linux"))))
+  #+END_SRC
