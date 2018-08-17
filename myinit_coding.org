@@ -1040,18 +1040,3 @@
 		  :after treemacs projectile
 		  :ensure t)))
    #+END_SRC
-* which operation system type
-  [[http://ergoemacs.org/emacs/elisp_determine_OS_version.html][Quelle]]
-  #+BEGIN_SRC emacs-lisp
-    ;; check OS type
-    (cond
-     ((string-equal system-type "windows-nt") ; Microsoft Windows
-      (progn
-	(message "Microsoft Windows")))
-     ((string-equal system-type "darwin") ; Mac OS X
-      (progn
-	(message "Mac OS X")))
-     ((string-equal system-type "gnu/linux") ; linux
-      (progn
-	(message "Linux"))))
-  #+END_SRC
